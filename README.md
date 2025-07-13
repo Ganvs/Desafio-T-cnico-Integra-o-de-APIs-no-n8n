@@ -88,4 +88,4 @@ O fluxo é composto pelos seguintes nodes principais:
 - **Sugestões para produção:** Adicionar autenticação, monitoramento de falhas, e alertas em caso de erro recorrente.
 
 ## Prints do fluxo
-![Captura de tela 2025-07-13 181406.png](Captura de tela 2025-07-13 181406.png)
+![Captura de tela 2025-07-13 181406.png](Captura%20de%20tela%202025-07-13%20181406.png)

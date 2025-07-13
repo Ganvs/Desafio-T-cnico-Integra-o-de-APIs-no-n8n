@@ -1,0 +1,347 @@
+{
+  "name": "Busca previsão do tempo por cidade de um CNPJ",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        140
+      ],
+      "id": "c5f154a9-6110-4ba4-9e6e-521a729b5d89",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "49904d5c-c1cd-46b0-9d2d-c4d6265aab83",
+              "name": "cnpj_tratado",
+              "value": "={{ $json.cnpj.replaceAll(\".\", \"\").replaceAll(\"/\", \"\").replaceAll(\"-\", \"\") }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        140
+      ],
+      "id": "7c7c273e-7e74-4e43-818e-38fab9edb58a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "=https://brasilapi.com.br/api/cptec/v1/cidade/{{ $json.municipio }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        40
+      ],
+      "id": "f48c7867-b775-46a4-aef7-58ceb6a087f8",
+      "name": "Busca ID Cidade",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://brasilapi.com.br/api/cptec/v1/clima/previsao/{{ $json.id }}/3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -60
+      ],
+      "id": "5e54db78-4083-4163-ad6e-fa8bcda93be5",
+      "name": "Busca previsao do tempo",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://brasilapi.com.br/api/cnpj/v1/{{ $json.cnpj_tratado }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        140
+      ],
+      "id": "4d2e4f35-b3a2-4e1e-8d9d-3d6fbbaa0df8",
+      "name": "Busca CNPJ",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c34d41d-963d-4ba4-847f-2b028eb40522",
+              "name": "cnpj",
+              "value": "={{ $('Busca CNPJ').item.json.cnpj }}",
+              "type": "string"
+            },
+            {
+              "id": "957dfef1-bc93-43e8-81e9-d41ffa5079b7",
+              "name": "razao_social",
+              "value": "={{ $('Busca CNPJ').item.json.razao_social }}",
+              "type": "string"
+            },
+            {
+              "id": "691374ee-fb63-4dec-a6c3-6827e9a41e9b",
+              "name": "cidade",
+              "value": "={{ $('Busca CNPJ').item.json.municipio.toSentenceCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "4a055754-7669-4f35-bbd5-e709efc25fe4",
+              "name": "previsao_do_tempo",
+              "value": "={{ $json.clima }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        -160
+      ],
+      "id": "64390cbf-0495-452d-9d4b-8428d2cc0792",
+      "name": "Resultado final"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c34d41d-963d-4ba4-847f-2b028eb40522",
+              "name": "cnpj",
+              "value": "={{ $('Busca CNPJ').item.json.cnpj }}",
+              "type": "string"
+            },
+            {
+              "id": "957dfef1-bc93-43e8-81e9-d41ffa5079b7",
+              "name": "razao_social",
+              "value": "={{ $('Busca CNPJ').item.json.razao_social }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        240
+      ],
+      "id": "de044c3d-8a81-48d6-9804-3d02cd728e8f",
+      "name": "Resultado final sem previsao do tempo"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=API de CNPJ com erro: {{ $json.error.message.replaceAll('\"', '').replaceAll('\\\\', '').split('message:')[1].split(',')[0] }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        660,
+        240
+      ],
+      "id": "c2b3b392-e3a9-4896-899d-d682421a8a5c",
+      "name": "Erros API CNPJ"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=API de cidade com erro: {{ $('Busca ID Cidade').item.json.error.message.replaceAll('\"', '').replaceAll('\\\\', '').split('message:')[1].split(',')[0] }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        240
+      ],
+      "id": "5f127848-745b-42af-9125-b6d2ae28b532",
+      "name": "Erros API Cidade"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=API de previsão com erro: {{ $('Busca previsao do tempo').item.json.error.message.replaceAll('\"', '').replaceAll('\\\\', '').split('message:')[1].split(',')[0] }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        40
+      ],
+      "id": "873c59c6-9d26-4b6e-9449-930968d9d0aa",
+      "name": "Erros API Tempo"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c34d41d-963d-4ba4-847f-2b028eb40522",
+              "name": "cnpj",
+              "value": "={{ $('Busca CNPJ').item.json.cnpj }}",
+              "type": "string"
+            },
+            {
+              "id": "957dfef1-bc93-43e8-81e9-d41ffa5079b7",
+              "name": "razao_social",
+              "value": "={{ $('Busca CNPJ').item.json.razao_social }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        40
+      ],
+      "id": "bbb13fe3-53d3-4231-8cf8-f7c850e48689",
+      "name": "Resultado final sem previsao do tempo1"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "cnpj": "40.496.921/0001-01"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Busca CNPJ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca ID Cidade": {
+      "main": [
+        [
+          {
+            "node": "Busca previsao do tempo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resultado final sem previsao do tempo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca CNPJ": {
+      "main": [
+        [
+          {
+            "node": "Busca ID Cidade",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erros API CNPJ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca previsao do tempo": {
+      "main": [
+        [
+          {
+            "node": "Resultado final",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resultado final sem previsao do tempo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resultado final sem previsao do tempo": {
+      "main": [
+        [
+          {
+            "node": "Erros API Cidade",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resultado final sem previsao do tempo1": {
+      "main": [
+        [
+          {
+            "node": "Erros API Tempo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dfb20c88-0622-4168-a2f4-65e4facbf939",
+  "meta": {
+    "instanceId": "76c2edbfc4eb872b41a9d1dc0305ce2d0119c7291a0d462a0bdcde1d70dae05c"
+  },
+  "id": "OxTV0STcsm46aba9",
+  "tags": []
+}
